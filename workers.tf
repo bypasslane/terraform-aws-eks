@@ -9,8 +9,10 @@ resource "aws_autoscaling_group" "workers" {
 
   tags = ["${concat(
     list(
-      map("key", "Name", "value", "${var.cluster_name}-${lookup(var.worker_groups[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true),
+      map("key", "Name", "value", "${var.cluster_name}-${lookup(var.worker_groups[count.index], "name", count.index)}", "propagate_at_launch", true),
       map("key", "kubernetes.io/cluster/${var.cluster_name}", "value", "owned", "propagate_at_launch", true),
+      map("key", "k8s.io/cluster-autoscaler/enabled", "value", "", "propagate_at_launch", true),
+      map("key", "k8s.io/cluster-autoscaler/${var.cluster_name", "value", "", "propagate_at_launch", true),
     ),
     local.asg_tags)
   }"]
@@ -46,7 +48,7 @@ resource "aws_security_group" "workers" {
   description = "Security group for all nodes in the cluster."
   vpc_id      = "${var.vpc_id}"
   count       = "${var.worker_security_group_id == "" ? 1 : 0}"
-  tags        = "${merge(var.tags, map("Name", "${var.cluster_name}-eks_worker_sg", "kubernetes.io/cluster/${var.cluster_name}", "owned"
+  tags        = "${merge(var.tags, map("Name", "${var.cluster_name}-worker-sg", "kubernetes.io/cluster/${var.cluster_name}", "owned"
   ))}"
 }
 

@@ -91,7 +91,7 @@ variable "kubeconfig_user_name" {
 
 variable "kubeconfig_aws_authenticator_command" {
   description = "Command to use to to fetch AWS EKS credentials"
-  default     = "heptio-authenticator-aws"
+  default     = "aws-iam-authenticator"
 }
 
 variable "kubeconfig_aws_authenticator_additional_args" {
