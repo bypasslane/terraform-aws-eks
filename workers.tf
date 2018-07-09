@@ -12,7 +12,7 @@ resource "aws_autoscaling_group" "workers" {
       map("key", "Name", "value", "${var.cluster_name}-${lookup(var.worker_groups[count.index], "name", count.index)}", "propagate_at_launch", true),
       map("key", "kubernetes.io/cluster/${var.cluster_name}", "value", "owned", "propagate_at_launch", true),
       map("key", "k8s.io/cluster-autoscaler/enabled", "value", "", "propagate_at_launch", true),
-      map("key", "k8s.io/cluster-autoscaler/${var.cluster_name", "value", "", "propagate_at_launch", true),
+      map("key", "k8s.io/cluster-autoscaler/${var.cluster_name}", "value", "", "propagate_at_launch", true),
     ),
     local.asg_tags)
   }"]
