@@ -48,12 +48,11 @@ data "template_file" "kubeconfig" {
   template = "${file("${path.module}/templates/kubeconfig.tpl")}"
 
   vars {
-    cluster_name                      = "${var.cluster_name}"
+    cluster_name                      = "${aws_eks_cluster.this.name}"
+    kubeconfig_name                   = "${local.kubeconfig_name}"
     endpoint                          = "${aws_eks_cluster.this.endpoint}"
     region                            = "${data.aws_region.current.name}"
     cluster_auth_base64               = "${aws_eks_cluster.this.certificate_authority.0.data}"
-    context_name                      = "${var.kubeconfig_context_name}"
-    user_name                         = "${var.kubeconfig_user_name}"
     aws_authenticator_command         = "${var.kubeconfig_aws_authenticator_command}"
     aws_authenticator_additional_args = "${length(var.kubeconfig_aws_authenticator_additional_args) > 0 ? "        - ${join("\n        - ", var.kubeconfig_aws_authenticator_additional_args)}" : "" }"
     aws_authenticator_env_variables   = "${length(var.kubeconfig_aws_authenticator_env_variables) > 0 ? "      env:\n${join("\n", data.template_file.aws_authenticator_env_variables.*.rendered)}" : ""}"
@@ -74,25 +73,18 @@ EOF
   }
 }
 
-data template_file config_map_aws_auth {
-  template = "${file("${path.module}/templates/config-map-aws-auth.yaml.tpl")}"
-
-  vars {
-    role_arn = "${aws_iam_role.workers.arn}"
-  }
-}
-
-data template_file userdata {
+data "template_file" "userdata" {
   template = "${file("${path.module}/templates/userdata.sh.tpl")}"
   count    = "${length(var.worker_groups)}"
 
   vars {
     region              = "${data.aws_region.current.name}"
-    cluster_name        = "${var.cluster_name}"
+    cluster_name        = "${aws_eks_cluster.this.name}"
     endpoint            = "${aws_eks_cluster.this.endpoint}"
     cluster_auth_base64 = "${aws_eks_cluster.this.certificate_authority.0.data}"
     max_pod_count       = "${lookup(local.max_pod_per_node, lookup(var.worker_groups[count.index], "instance_type", lookup(var.workers_group_defaults, "instance_type")))}"
     pre_userdata        = "${lookup(var.worker_groups[count.index], "pre_userdata",lookup(var.workers_group_defaults, "pre_userdata"))}"
     additional_userdata = "${lookup(var.worker_groups[count.index], "additional_userdata",lookup(var.workers_group_defaults, "additional_userdata"))}"
+    kubelet_node_labels = "${lookup(var.worker_groups[count.index], "kubelet_node_labels",lookup(var.workers_group_defaults, "kubelet_node_labels"))}"
   }
 }

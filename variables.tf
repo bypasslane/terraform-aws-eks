@@ -8,7 +8,7 @@ variable "cluster_security_group_id" {
 }
 
 variable "workstation_cidr" {
-  description = "Override the default ingress rule that allows communication with the EKS cluster API. If not given, will use current IP/32.    "
+  description = "Override the default ingress rule that allows communication with the EKS cluster API. If not given, will use current IP/32. "
   default     = ""
 }
 
@@ -18,13 +18,36 @@ variable "cluster_version" {
 }
 
 variable "config_output_path" {
-  description = "Determines where config files are placed if using configure_kubectl_session and you want config files to land outside the current working directory."
+  description = "Determines where config files are placed if using configure_kubectl_session and you want config files to land outside the current working directory. Should end in a forward slash / ."
   default     = "./"
 }
 
-variable "configure_kubectl_session" {
-  description = "Configure the current session's kubectl to use the instantiated EKS cluster."
+variable "write_kubeconfig" {
+  description = "Whether to write a kubeconfig file containing the cluster configuration."
   default     = true
+}
+
+variable "manage_aws_auth" {
+  description = "Whether to write and apply the aws-auth configmap file."
+  default     = true
+}
+
+variable "map_accounts" {
+  description = "Additional AWS account numbers to add to the aws-auth configmap. See examples/eks_test_fixture/variables.tf for example format."
+  type        = "list"
+  default     = []
+}
+
+variable "map_roles" {
+  description = "Additional IAM roles to add to the aws-auth configmap. See examples/eks_test_fixture/variables.tf for example format."
+  type        = "list"
+  default     = []
+}
+
+variable "map_users" {
+  description = "Additional IAM users to add to the aws-auth configmap. See examples/eks_test_fixture/variables.tf for example format."
+  type        = "list"
+  default     = []
 }
 
 variable "subnets" {
@@ -34,6 +57,7 @@ variable "subnets" {
 
 variable "tags" {
   description = "A map of tags to add to all resources."
+  type        = "map"
   default     = {}
 }
 
@@ -61,11 +85,16 @@ variable "workers_group_defaults" {
     asg_max_size         = "3"           # Maximum worker capacity in the autoscaling group.
     asg_min_size         = "1"           # Minimum worker capacity in the autoscaling group.
     instance_type        = "m4.large"    # Size of the workers instances.
+    root_volume_size     = "20"          # root volume size of workers instances.
+    root_volume_type     = "gp2"         # root volume type of workers instances, can be 'standard', 'gp2', or 'io1'
+    root_iops            = "0"           # The amount of provisioned IOPS. This must be set with a volume_type of "io1".
     key_name             = ""            # The key name that should be used for the instances in the autoscaling group
     pre_userdata         = ""            # userdata to pre-append to the default userdata.
     additional_userdata  = ""            # userdata to append to the default userdata.
     ebs_optimized        = true          # sets whether to use ebs optimization on supported types.
     public_ip            = false         # Associate a public ip address with a worker
+    kubelet_node_labels  = ""            # This string is passed directly to kubelet via --node-lables= if set. It should be comma delimited with no spaces. If left empty no --node-labels switch is added.
+    subnets              = ""            # A comma delimited string of subnets to place the worker nodes in. i.e. subnet-123,subnet-456,subnet-789
   }
 }
 
@@ -79,27 +108,24 @@ variable "worker_sg_ingress_from_port" {
   default     = "1025"
 }
 
-variable "kubeconfig_context_name" {
-  description = "Name of the kubeconfig context."
-  default     = "aws"
-}
-
-variable "kubeconfig_user_name" {
-  description = "Name of the kubeconfig user."
-  default     = "aws"
-}
-
 variable "kubeconfig_aws_authenticator_command" {
-  description = "Command to use to to fetch AWS EKS credentials"
+  description = "Command to use to to fetch AWS EKS credentials."
   default     = "aws-iam-authenticator"
 }
 
 variable "kubeconfig_aws_authenticator_additional_args" {
-  description = "Any additional arguments to pass to the authenticator such as the role to assume [\"-r\", \"MyEksRole\"]"
+  description = "Any additional arguments to pass to the authenticator such as the role to assume. e.g. [\"-r\", \"MyEksRole\"]."
+  type        = "list"
   default     = []
 }
 
 variable "kubeconfig_aws_authenticator_env_variables" {
-  description = "Environment variables that should be used when executing the authenticator i.e. { AWS_PROFILE = \"eks\"}"
+  description = "Environment variables that should be used when executing the authenticator. e.g. { AWS_PROFILE = \"eks\"}."
+  type        = "map"
   default     = {}
+}
+
+variable "kubeconfig_name" {
+  description = "Override the default name used for items kubeconfig."
+  default     = ""
 }
