@@ -118,6 +118,35 @@ resource "aws_iam_role_policy_attachment" "workers_AmazonEC2ContainerRegistryRea
   role       = "${aws_iam_role.workers.name}"
 }
 
+resource "aws_iam_policy" "AmazonEKSClusterAutoscalerPolicy" {
+  name        = "AmazonEKSClusterAutoscalerPolicy"
+  description = "Allow k8s cluster-autoscaler addon to enumerate tags and modify ASG parameters."
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "autoscaling:DescribeAutoScalingGroups",
+                "autoscaling:DescribeAutoScalingInstances",
+                "autoscaling:DescribeTags",
+                "autoscaling:SetDesiredCapacity",
+                "autoscaling:TerminateInstanceInAutoScalingGroup"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "workers_AmazonEKSClusterAutoscalerPolicy" {
+  policy_arn = "${aws_iam_policy.AmazonEKSClusterAutoscalerPolicy.arn}"
+  role       = "${aws_iam_role.workers.name}"
+}
+
 resource "null_resource" "tags_as_list_of_maps" {
   count = "${length(keys(var.tags))}"
 
