@@ -34,6 +34,11 @@ output "config_map_aws_auth" {
   value       = "${data.template_file.config_map_aws_auth.rendered}"
 }
 
+output "cluster-autoscaler-yaml" {
+  description = "A kubernetes configuration to authenticate to this EKS cluster."
+  value       = "${data.template_file.cluster-autoscaler.rendered}"
+}
+
 output "kubeconfig" {
   description = "kubectl config file contents for this EKS cluster."
   value       = "${data.template_file.kubeconfig.rendered}"
