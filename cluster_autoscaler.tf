@@ -9,7 +9,7 @@ resource "null_resource" "update_cluster_autoscaler" {
   }
 
   triggers {
-    config_map_rendered = "${data.template_file.cluster-autoscaler.rendered}"
+    config_map_rendered = "${data.template_file.kubeconfig.rendered}"
   }
 }
 
@@ -17,8 +17,9 @@ data "template_file" "cluster-autoscaler" {
   template = "${file("${path.module}/templates/cluster-autoscaler.yaml.tpl")}"
 
   vars {
-    region    = "${data.aws_region.current.name}"
-    version   = "v1.1.0"
-    expander  = "least-waste"
+    region        = "${data.aws_region.current.name}"
+    cluster_name  = "${var.cluster_name}"
+    version       = "v1.2.0"
+    expander      = "least-waste"
   }
 }

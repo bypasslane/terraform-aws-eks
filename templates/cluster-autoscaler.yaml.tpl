@@ -137,9 +137,10 @@ spec:
             - --stderrthreshold=info
             - --cloud-provider=aws
             - --skip-nodes-with-local-storage=false
+            - --skip-nodes-with-system-pods=false
             - --balance-similar-node-groups
             - --expander=${expander}
-            - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,kubernetes.io/cluster/KUBE_CLUSTER_NAME
+            - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,kubernetes.io/cluster/${cluster_name}
           env:
             - name: AWS_REGION
               value: ${region}
