@@ -9,15 +9,10 @@ resource "aws_autoscaling_group" "workers" {
 
   tags = ["${concat(
     list(
-<<<<<<< HEAD
-      map("key", "Name", "value", "${var.cluster_name}-${lookup(var.worker_groups[count.index], "name", count.index)}", "propagate_at_launch", true),
-      map("key", "kubernetes.io/cluster/${var.cluster_name}", "value", "owned", "propagate_at_launch", true),
-      map("key", "k8s.io/cluster-autoscaler/enabled", "value", "", "propagate_at_launch", true),
-      map("key", "k8s.io/cluster-autoscaler/${var.cluster_name}", "value", "", "propagate_at_launch", true),
-=======
       map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true),
       map("key", "kubernetes.io/cluster/${aws_eks_cluster.this.name}", "value", "owned", "propagate_at_launch", true),
->>>>>>> 2814efcb8a9940b5132a9ab93b58114de47f6ac0
+      map("key", "k8s.io/cluster-autoscaler/enabled", "value", "", "propagate_at_launch", true),
+      map("key", "k8s.io/cluster-autoscaler/${aws_eks_cluster.this.name}", "value", "", "propagate_at_launch", true),
     ),
     local.asg_tags)
   }"]
@@ -115,6 +110,35 @@ resource "aws_iam_role_policy_attachment" "workers_AmazonEKS_CNI_Policy" {
 
 resource "aws_iam_role_policy_attachment" "workers_AmazonEC2ContainerRegistryReadOnly" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  role       = "${aws_iam_role.workers.name}"
+}
+
+resource "aws_iam_policy" "AmazonEKSClusterAutoscalerPolicy" {
+  name        = "AmazonEKSClusterAutoscalerPolicy"
+  description = "Allow k8s cluster-autoscaler addon to enumerate tags and modify ASG parameters."
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "autoscaling:DescribeAutoScalingGroups",
+                "autoscaling:DescribeAutoScalingInstances",
+                "autoscaling:DescribeTags",
+                "autoscaling:SetDesiredCapacity",
+                "autoscaling:TerminateInstanceInAutoScalingGroup"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "workers_AmazonEKSClusterAutoscalerPolicy" {
+  policy_arn = "${aws_iam_policy.AmazonEKSClusterAutoscalerPolicy.arn}"
   role       = "${aws_iam_role.workers.name}"
 }
 
