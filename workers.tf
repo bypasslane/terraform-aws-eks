@@ -114,7 +114,7 @@ resource "aws_iam_role_policy_attachment" "workers_AmazonEC2ContainerRegistryRea
 }
 
 resource "aws_iam_policy" "AmazonEKSClusterAutoscalerPolicy" {
-  name        = "AmazonEKSClusterAutoscalerPolicy"
+  name        = "AmazonEKSClusterAutoscalerPolicy_${var.cluster_name}"
   description = "Allow k8s cluster-autoscaler addon to enumerate tags and modify ASG parameters."
 
   policy = <<EOF
@@ -127,6 +127,7 @@ resource "aws_iam_policy" "AmazonEKSClusterAutoscalerPolicy" {
                 "autoscaling:DescribeAutoScalingGroups",
                 "autoscaling:DescribeAutoScalingInstances",
                 "autoscaling:DescribeTags",
+                "autoscaling:DescribeLaunchConfigurations",
                 "autoscaling:SetDesiredCapacity",
                 "autoscaling:TerminateInstanceInAutoScalingGroup"
             ],
